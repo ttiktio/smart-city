@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const STAGES = [
@@ -13,6 +13,12 @@ const STAGES = [
 export function LoadingScreen({ onDone }: { onDone: () => void }) {
   const [progress, setProgress] = useState(0);
   const [stage, setStage] = useState(0);
+  const onDoneRef = useRef(onDone);
+
+  // Sync ref with latest callback
+  useEffect(() => {
+    onDoneRef.current = onDone;
+  }, [onDone]);
 
   useEffect(() => {
     let p = 0;
@@ -21,13 +27,15 @@ export function LoadingScreen({ onDone }: { onDone: () => void }) {
       if (p >= 100) {
         p = 100;
         clearInterval(id);
-        setTimeout(onDone, 600);
+        setTimeout(() => {
+          onDoneRef.current();
+        }, 600);
       }
       setProgress(p);
       setStage(Math.min(STAGES.length - 1, Math.floor((p / 100) * STAGES.length)));
     }, 130);
     return () => clearInterval(id);
-  }, [onDone]);
+  }, []);
 
   return (
     <AnimatePresence>
